@@ -1,0 +1,12 @@
+version: "2"
+linters:
+  enable:
+    - errcheck
+    - errchkjson
+    - misspell
+    - gosec
+    - govet
+
+formatters:
+  enable:
+    - gofumpt
