@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 )
 
 func healthz(w http.ResponseWriter, r *http.Request) {
@@ -22,7 +23,13 @@ func main() {
 		port = "8080"
 	}
 	http.HandleFunc("/healthz", healthz)
-	err := http.ListenAndServe(":"+port, nil)
+	serv := &http.Server{
+		Addr:           ":" + port,
+		ReadTimeout:    10 * time.Second,
+		WriteTimeout:   10 * time.Second,
+		MaxHeaderBytes: 1 << 20,
+	}
+	err := serv.ListenAndServe()
 	if err != nil {
 		log.Fatal(err)
 	}
