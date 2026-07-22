@@ -6,9 +6,10 @@ import (
 	"net/http"
 )
 
-func Healthz(w http.ResponseWriter, r *http.Request) {
+func NotFound(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	response := map[string]string{"message": "OK"}
+	w.WriteHeader(http.StatusNotFound)
+	response := map[string]string{"message": "Not Found"}
 	err := json.NewEncoder(w).Encode(response)
 	if err != nil {
 		log.Println(err)

@@ -1,24 +1,31 @@
 package main
 
 import (
-	"WebPanel/internal/handlers"
 	"log"
 	"net/http"
 	"os"
 	"time"
+
+	"WebPanel/internal/handlers"
+	"WebPanel/internal/middleware"
 )
 
 func main() {
+
+	mux := http.NewServeMux()
+
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
 	}
-	http.HandleFunc("/healthz", handlers.Healthz)
+
+	mux.HandleFunc("/healthz", handlers.Healthz)
+	mux.HandleFunc("/", handlers.NotFound)
 	serv := &http.Server{
-		Addr:           ":" + port,
-		ReadTimeout:    10 * time.Second,
-		WriteTimeout:   10 * time.Second,
-		MaxHeaderBytes: 1 << 20,
+		Addr:         ":" + port,
+		Handler:      middleware.Logging(mux),
+		ReadTimeout:  10 * time.Second,
+		WriteTimeout: 10 * time.Second,
 	}
 	err := serv.ListenAndServe()
 	if err != nil {
