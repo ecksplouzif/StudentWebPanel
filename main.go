@@ -1,17 +1,15 @@
 package main
 
 import (
+	"WebPanel/internal/handlers"
+	"WebPanel/internal/middleware"
 	"log"
 	"net/http"
 	"os"
 	"time"
-
-	"WebPanel/internal/handlers"
-	"WebPanel/internal/middleware"
 )
 
 func main() {
-
 	mux := http.NewServeMux()
 
 	port := os.Getenv("PORT")
@@ -21,6 +19,7 @@ func main() {
 
 	mux.HandleFunc("/healthz", handlers.Healthz)
 	mux.HandleFunc("/", handlers.NotFound)
+	mux.HandleFunc("/login", handlers.Login)
 	serv := &http.Server{
 		Addr:         ":" + port,
 		Handler:      middleware.Logging(mux),
