@@ -21,6 +21,6 @@ func Logging(next http.Handler) http.Handler {
 		start := time.Now()
 		lrw := &loggingResponseWriter{ResponseWriter: w, statusCode: http.StatusOK}
 		next.ServeHTTP(lrw, r)
-		slog.Info("", "method", r.Method, "path", r.URL.Path, "status", lrw.statusCode, "time", time.Since(start))
+		slog.Info("http request", "method", r.Method, "path", r.URL.Path, "status", lrw.statusCode, "time", time.Since(start))
 	})
 }

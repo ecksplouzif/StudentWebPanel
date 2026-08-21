@@ -12,14 +12,16 @@ import (
 func main() {
 	mux := http.NewServeMux()
 
+	mux.HandleFunc("/healthz", handlers.Healthz)
+	mux.HandleFunc("/", handlers.NotFound)
+	mux.HandleFunc("/login", handlers.Login)
+	mux.HandleFunc("/auth/callback", handlers.Callback)
+
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
 	}
 
-	mux.HandleFunc("/healthz", handlers.Healthz)
-	mux.HandleFunc("/", handlers.NotFound)
-	mux.HandleFunc("/login", handlers.Login)
 	serv := &http.Server{
 		Addr:         ":" + port,
 		Handler:      middleware.Logging(mux),
