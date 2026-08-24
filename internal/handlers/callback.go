@@ -31,7 +31,6 @@ func Callback(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
 		return
 	}
-	slog.Info("auth callback", "query", r.URL.Query(), "cookies", cookie.Value)
 
 	tokenURL := os.Getenv("TOKEN_URL")
 	supaAPIKey := os.Getenv("SUPABASE_API_KEY")
@@ -102,9 +101,5 @@ func Callback(w http.ResponseWriter, r *http.Request) {
 		SameSite: http.SameSiteLaxMode,
 	}
 	http.SetCookie(w, &swp)
-
-	setCookies := w.Header().Values("Set-Cookie")
-	slog.Info("new_cookie", "vailue", setCookies)
-
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
