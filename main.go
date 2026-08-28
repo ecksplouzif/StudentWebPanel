@@ -37,6 +37,8 @@ func main() {
 	mux.HandleFunc("/healthz", handlers.Healthz)
 	mux.HandleFunc("/login", handlers.Login)
 	mux.HandleFunc("/auth/callback", handlers.Callback)
+	mux.HandleFunc("/auth", handlers.GenerateVerefiToken)
+	mux.Handle("/profile", middleware.Authmiddleware(Mykeyfunc, http.HandlerFunc(handlers.Profile)))
 	mux.Handle("/", middleware.Authmiddleware(Mykeyfunc, http.HandlerFunc(handlers.NotFound)))
 
 	port := os.Getenv("PORT")
