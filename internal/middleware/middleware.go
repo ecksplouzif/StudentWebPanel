@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"context"
 	"log/slog"
 	"net/http"
 	"time"
@@ -8,6 +9,15 @@ import (
 	"github.com/MicahParks/keyfunc/v3"
 	"github.com/golang-jwt/jwt/v5"
 )
+
+type ClaimsUserData struct {
+	Profile UserProfile `json:"user_metadata"`
+	jwt.RegisteredClaims
+}
+type UserProfile struct {
+	FullName  string `json:"full_name"`
+	AvatarURL string `json:"avatar_url"`
+}
 
 type loggingResponseWriter struct {
 	http.ResponseWriter
@@ -27,18 +37,26 @@ func Authmiddleware(k keyfunc.Keyfunc, next http.Handler) http.Handler {
 			http.Redirect(w, r, "/login", http.StatusSeeOther)
 			return
 		}
-		token, err := jwt.Parse(cookie.Value, k.Keyfunc)
+		token, err := jwt.ParseWithClaims(cookie.Value, &ClaimsUserData{}, k.Keyfunc)
 		if err != nil {
 			slog.Info("Failed parse JWT token", "error", err)
 			http.Redirect(w, r, "/login", http.StatusSeeOther)
 			return
 		}
-		if !token.Valid {
-			slog.Info("The token is not valid")
+		claims, ok := token.Claims.(*ClaimsUserData)
+		if !ok {
+			slog.Info("unknown claims type, cannot proceed")
+		}
+		subject, err := token.Claims.GetSubject()
+		if err != nil {
+			slog.Info("Failed get Subject", "error", err)
 			http.Redirect(w, r, "/login", http.StatusSeeOther)
 			return
 		}
-		next.ServeHTTP(w, r)
+		ctx := context.WithValue(r.Context(), "Subject", subject)
+		ctx = context.WithValue(ctx, "FullName", claims.Profile.FullName)
+		ctx = context.WithValue(ctx, "AvatarURL", claims.Profile.AvatarURL)
+		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
 

@@ -3,6 +3,7 @@ package handlers
 import (
 	"bytes"
 	"encoding/json"
+	"io"
 	"log/slog"
 	"net/http"
 	"os"
@@ -66,7 +67,11 @@ func Callback(w http.ResponseWriter, r *http.Request) {
 	}
 	defer func() { _ = resp.Body.Close() }()
 	if resp.StatusCode != http.StatusOK {
-		slog.Error("Non-OK response from token endpoint", "status", resp.StatusCode)
+		respBody, readErr := io.ReadAll(resp.Body)
+		if readErr != nil {
+			slog.Error("Failed to read error response", "error", readErr)
+		}
+		slog.Error("Non-OK response from token endpoint", "status", resp.StatusCode, "body", respBody)
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
 		return
 	}
@@ -78,7 +83,6 @@ func Callback(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
 		return
 	}
-	slog.Info("Token response", "user_id", tokenResp.User.ID, "user_email", tokenResp.User.Email)
 
 	swp := http.Cookie{
 		Name:     "pkce_verifier",
