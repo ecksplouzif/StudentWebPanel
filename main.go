@@ -1,8 +1,6 @@
 package main
 
 import (
-	"WebPanel/internal/handlers"
-	"WebPanel/internal/middleware"
 	"context"
 	"io"
 	"log/slog"
@@ -12,15 +10,18 @@ import (
 
 	"github.com/MicahParks/keyfunc/v3"
 	"github.com/jackc/pgx/v5/pgxpool"
+
+	"WebPanel/internal/handlers"
+	"WebPanel/internal/middleware"
 )
 
-func Conectdatabase() *pgxpool.Pool {
+func Connectdatabase() *pgxpool.Pool {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	conn, err := pgxpool.New(ctx, os.Getenv("CONECT_DATABASE_URL"))
 	if err != nil {
-		slog.Error("Failed conect to Database", "error", err)
+		slog.Error("Failed connect to Database", "error", err)
 	}
 	return conn
 }
@@ -46,11 +47,11 @@ func GetJWKS() keyfunc.Keyfunc {
 func main() {
 	mux := http.NewServeMux()
 	Mykeyfunc := GetJWKS()
-	conect := Conectdatabase()
+	connect := Connectdatabase()
 
 	mux.HandleFunc("/healthz", handlers.Healthz)
 	mux.HandleFunc("/login", handlers.Login)
-	mux.HandleFunc("/auth/callback", handlers.Callback(conect))
+	mux.HandleFunc("/auth/callback", handlers.Callback(connect))
 	mux.HandleFunc("/auth", handlers.GenerateVerefiToken)
 	mux.Handle("/profile", middleware.Authmiddleware(Mykeyfunc, http.HandlerFunc(handlers.Profile)))
 	mux.Handle("/", middleware.Authmiddleware(Mykeyfunc, http.HandlerFunc(handlers.NotFound)))
