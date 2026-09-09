@@ -9,6 +9,8 @@ import (
 type ProfileTemplate struct {
 	UserSubject interface{}
 	UserName    interface{}
+	URL         string
+	Title       string
 	// AvatarURL string dont need rigt now
 }
 
@@ -20,6 +22,8 @@ func Profile(w http.ResponseWriter, r *http.Request) {
 	data := ProfileTemplate{
 		UserSubject: subject,
 		UserName:    name,
+		URL:         "/logout",
+		Title:       "Logout",
 	}
 	err := tmpl.Execute(w, data)
 	if err != nil {

@@ -50,6 +50,7 @@ func main() {
 	connect := Connectdatabase()
 
 	mux.HandleFunc("/healthz", handlers.Healthz)
+	mux.HandleFunc("/logout", handlers.Logout)
 	mux.HandleFunc("/login", handlers.Login)
 	mux.HandleFunc("/auth/callback", handlers.Callback(connect))
 	mux.HandleFunc("/auth", handlers.GenerateVerefiToken)
