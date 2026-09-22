@@ -2,7 +2,7 @@ package handlers
 
 import (
 	"html/template"
-	"log"
+	"log/slog"
 	"net/http"
 )
 
@@ -11,14 +11,15 @@ type LoginTemplate struct {
 	URL   string
 }
 
-func Login(w http.ResponseWriter, r *http.Request) {
-	tmpl := template.Must(template.ParseFiles("web/login.html"))
-	data := LoginTemplate{
-		Title: "Authorization with Google",
-		URL:   "/auth",
-	}
-	err := tmpl.Execute(w, data)
-	if err != nil {
-		log.Println(err)
+func Login(tmpl *template.Template) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		data := LoginTemplate{
+			Title: "Authorization with Google",
+			URL:   "/auth",
+		}
+		err := tmpl.ExecuteTemplate(w, "login.html", data)
+		if err != nil {
+			slog.Error("Isert data to template", "error", err)
+		}
 	}
 }

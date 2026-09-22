@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"embed"
+	"html/template"
 	"io"
 	"log/slog"
 	"net/http"
@@ -14,6 +16,17 @@ import (
 	"WebPanel/internal/handlers"
 	"WebPanel/internal/middleware"
 )
+
+//go:embed web/*
+var templatesFS embed.FS
+
+func GetTemplates() *template.Template {
+	tmpl, err := template.ParseFS(templatesFS, "web/*.html")
+	if err != nil {
+		slog.Error("Failed parse templates", "error", err)
+	}
+	return tmpl
+}
 
 func Connectdatabase() *pgxpool.Pool {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -30,16 +43,16 @@ func GetJWKS() keyfunc.Keyfunc {
 	project_URL := os.Getenv("PROJECT_URL") + "/auth/v1/.well-known/jwks.json"
 	res, err := http.Get(project_URL)
 	if err != nil {
-		slog.Info("Failed get public key Supabase", "error", err)
+		slog.Error("Failed get public key Supabase", "error", err)
 	}
 	body, err := io.ReadAll(res.Body)
 	if err != nil {
-		slog.Info("Failed read body", "error", err)
+		slog.Error("Failed read body", "error", err)
 	}
 	defer func() { _ = res.Body.Close() }()
 	k, err := keyfunc.NewJWKSetJSON(body)
 	if err != nil {
-		slog.Info("Failed to create a keyfunc.Keyfunc", "error", err)
+		slog.Error("Failed to create a keyfunc.Keyfunc", "error", err)
 	}
 	return k
 }
@@ -48,13 +61,14 @@ func main() {
 	mux := http.NewServeMux()
 	Mykeyfunc := GetJWKS()
 	connect := Connectdatabase()
+	template := GetTemplates()
 
 	mux.HandleFunc("/healthz", handlers.Healthz)
 	mux.HandleFunc("/logout", handlers.Logout)
-	mux.HandleFunc("/login", handlers.Login)
+	mux.HandleFunc("/login", handlers.Login(template))
 	mux.HandleFunc("/auth/callback", handlers.Callback(connect))
 	mux.HandleFunc("/auth", handlers.GenerateVerefiToken)
-	mux.Handle("/profile", middleware.Authmiddleware(Mykeyfunc, http.HandlerFunc(handlers.Profile)))
+	mux.Handle("/profile", middleware.Authmiddleware(Mykeyfunc, http.HandlerFunc(handlers.Profile(template))))
 	mux.Handle("/", middleware.Authmiddleware(Mykeyfunc, http.HandlerFunc(handlers.NotFound)))
 
 	port := os.Getenv("PORT")
