@@ -1,6 +1,8 @@
 package main
 
 import (
+	"WebPanel/internal/handlers"
+	"WebPanel/internal/middleware"
 	"context"
 	"embed"
 	"html/template"
@@ -12,9 +14,6 @@ import (
 
 	"github.com/MicahParks/keyfunc/v3"
 	"github.com/jackc/pgx/v5/pgxpool"
-
-	"WebPanel/internal/handlers"
-	"WebPanel/internal/middleware"
 )
 
 //go:embed web/*
